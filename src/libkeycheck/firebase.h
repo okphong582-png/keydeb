@@ -1,6 +1,9 @@
 #ifndef FIREBASE_H
 #define FIREBASE_H
 
+#include <stddef.h>
+#include "keycheck.h"
+
 typedef struct {
     char key[256];
     char duration[16];

@@ -1,6 +1,8 @@
 #ifndef KEYCHECK_H
 #define KEYCHECK_H
 
+#include <stddef.h>
+
 typedef enum {
     KEY_VALID = 0,
     KEY_INVALID = -1,
@@ -23,7 +25,7 @@ int keycheck_validate_key(const char *key, ActivationData *out);
 int keycheck_check_activation(ActivationData *out);
 int keycheck_save_activation(const ActivationData *data);
 int keycheck_clear_activation(void);
-const char* keycheck_get_device_id(void);
+int keycheck_get_device_id(char *out, size_t out_size);
 int keycheck_is_debugged(void);
 int keycheck_verify_integrity(void);
 

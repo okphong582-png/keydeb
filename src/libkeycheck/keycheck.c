@@ -6,6 +6,7 @@
 #include <time.h>
 #include <sys/stat.h>
 #include <dlfcn.h>
+#include <openssl/sha.h>
 #include "keycheck.h"
 #include "antidebug.h"
 #include "firebase.h"
@@ -130,7 +131,6 @@ int keycheck_check_activation(ActivationData *out)
     char device_id[128];
     keycheck_get_device_id(device_id, sizeof(device_id));
 
-    char line[512];
     char saved_device[128];
     char saved_key[256];
     long saved_expires = 0;
