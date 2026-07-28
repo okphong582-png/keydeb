@@ -5,6 +5,7 @@
 #include <time.h>
 #include <curl/curl.h>
 #include "keycheck.h"
+#include "firebase.h"
 
 static char g_database_url[512] = {0};
 

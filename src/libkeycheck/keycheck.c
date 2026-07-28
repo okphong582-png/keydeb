@@ -6,7 +6,7 @@
 #include <time.h>
 #include <sys/stat.h>
 #include <dlfcn.h>
-#include <openssl/sha.h>
+#include <openssl/evp.h>
 #include "keycheck.h"
 #include "antidebug.h"
 #include "firebase.h"
@@ -43,7 +43,7 @@ int keycheck_init(const char *firebase_url)
 
     const char *config_dir = get_config_dir();
     ensure_dir(config_dir);
-    snprintf(g_activation_path, sizeof(g_activation_path), "%s/activation.dat", config_dir);
+    snprintf(g_activation_path, sizeof(g_activation_path), "%.1000s/activation.dat", config_dir);
 
     firebase_init(firebase_url);
     return 0;
@@ -58,18 +58,20 @@ int keycheck_get_device_id(char *out, size_t out_size)
     snprintf(buf, sizeof(buf), "%s-%d-%ld", hostname, getuid(), (long)time(NULL));
 
     unsigned char hash[32];
-    SHA256_CTX ctx;
-    SHA256_Init(&ctx);
-    SHA256_Update(&ctx, buf, strlen(buf));
+    unsigned int hash_len;
+    EVP_MD_CTX *ctx = EVP_MD_CTX_new();
+    EVP_DigestInit_ex(ctx, EVP_sha256(), NULL);
+    EVP_DigestUpdate(ctx, buf, strlen(buf));
 
     unsigned char extra[64];
     FILE *f = fopen("/etc/machine-id", "rb");
     if (f) {
         size_t n = fread(extra, 1, sizeof(extra), f);
-        SHA256_Update(&ctx, extra, n);
+        EVP_DigestUpdate(ctx, extra, n);
         fclose(f);
     }
-    SHA256_Final(hash, &ctx);
+    EVP_DigestFinal_ex(ctx, hash, &hash_len);
+    EVP_MD_CTX_free(ctx);
 
     char hex[65];
     for (int i = 0; i < 32; i++) {
@@ -77,7 +79,7 @@ int keycheck_get_device_id(char *out, size_t out_size)
     }
     hex[64] = 0;
 
-    strncpy(out, hex, out_size - 1);
+    snprintf(out, out_size, "%s", hex);
     return 0;
 }
 
@@ -110,9 +112,9 @@ int keycheck_validate_key(const char *key, ActivationData *out)
     firebase_register_device(device_id, key, expires_at);
 
     memset(out, 0, sizeof(ActivationData));
-    strncpy(out->device_id, device_id, sizeof(out->device_id) - 1);
-    strncpy(out->key, key, sizeof(out->key) - 1);
-    strncpy(out->duration, key_data.duration, sizeof(out->duration) - 1);
+    snprintf(out->device_id, sizeof(out->device_id), "%s", device_id);
+    snprintf(out->key, sizeof(out->key), "%s", key);
+    snprintf(out->duration, sizeof(out->duration), "%s", key_data.duration);
     out->activated_at = time(NULL);
     out->expires_at = expires_at;
 
@@ -150,8 +152,8 @@ int keycheck_check_activation(ActivationData *out)
     }
 
     memset(out, 0, sizeof(ActivationData));
-    strncpy(out->device_id, saved_device, sizeof(out->device_id) - 1);
-    strncpy(out->key, saved_key, sizeof(out->key) - 1);
+    snprintf(out->device_id, sizeof(out->device_id), "%s", saved_device);
+    snprintf(out->key, sizeof(out->key), "%s", saved_key);
     out->expires_at = saved_expires;
     strncpy(out->duration, "custom", sizeof(out->duration) - 1);
 
