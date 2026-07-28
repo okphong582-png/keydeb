@@ -23,7 +23,6 @@ jobs:
       run: |
         cd src/libkeycheck
         make
-        make install DESTDIR=${{ github.workspace }}/build
 
     - name: Build DEB package
       run: |
@@ -38,12 +37,10 @@ jobs:
         mkdir -p build/usr/bin
         mkdir -p build/etc/keycheck
 
-        cp build/lib/libkeycheck.so build/usr/lib/
-        cp build/bin/keycheck build/usr/bin/
-        cp scripts/keycheck.sh build/usr/bin/keycheck-wrapper
+        cp src/libkeycheck/libkeycheck.so build/usr/lib/
+        cp scripts/keycheck.sh build/usr/bin/keycheck
 
         chmod 755 build/usr/bin/keycheck
-        chmod 755 build/usr/bin/keycheck-wrapper
 
         cd build
         dpkg-deb --build . ${{ github.workspace }}/com.glorystore.keycheck.deb

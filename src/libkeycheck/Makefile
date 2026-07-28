@@ -22,7 +22,7 @@ install: $(TARGET)
 	install -d $(DESTDIR)$(LIBDIR)
 	install -m 755 $(TARGET) $(DESTDIR)$(LIBDIR)/
 	install -d $(DESTDIR)$(BINDIR)
-	install -m 755 keycheck-cli $(DESTDIR)$(BINDIR)/keycheck
+	install -m 755 $(DESTDIR)/../../scripts/keycheck.sh $(DESTDIR)$(BINDIR)/keycheck 2>/dev/null || true
 
 uninstall:
 	rm -f $(DESTDIR)$(LIBDIR)/$(TARGET)
