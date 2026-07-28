@@ -1,0 +1,25 @@
+{
+  "rules": {
+    "keys": {
+      ".read": true,
+      ".write": true,
+      "$key": {
+        ".validate": "newData.hasChildren(['duration', 'status', 'createdAt'])",
+        "duration": { ".validate": "newData.val() === '1day' || newData.val() === '7day' || newData.val() === '30day'" },
+        "status": { ".validate": "newData.val() === 'active' || newData.val() === 'used'" },
+        "deviceId": { ".validate": "newData.isString()" },
+        "createdAt": { ".validate": "newData.isNumber()" }
+      }
+    },
+    "devices": {
+      ".read": true,
+      ".write": true,
+      "$device_id": {
+        ".validate": "newData.hasChildren(['key', 'activatedAt', 'expiresAt'])",
+        "key": { ".validate": "newData.isString()" },
+        "activatedAt": { ".validate": "newData.isNumber()" },
+        "expiresAt": { ".validate": "newData.isNumber()" }
+      }
+    }
+  }
+}

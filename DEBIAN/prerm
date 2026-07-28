@@ -1,0 +1,14 @@
+#!/bin/bash
+
+set -e
+
+CONFIG_DIR="$HOME/.config/glorystore"
+ACTIVATION_FILE="$CONFIG_DIR/activation.dat"
+
+if [ "$1" = "remove" ] || [ "$1" = "purge" ]; then
+    if [ -f "$ACTIVATION_FILE" ]; then
+        rm -f "$ACTIVATION_FILE"
+    fi
+fi
+
+exit 0

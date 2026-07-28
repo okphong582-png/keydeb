@@ -1,0 +1,10 @@
+Package: com.glorystore.keycheck
+Version: 1.0.0
+Architecture: iphoneos-arm
+Maintainer: GloryStore
+Depends: curl, zenity
+Section: System
+Priority: optional
+Description: GloryStore Key Validation System
+ Anti-crack key validation with Firebase integration.
+ Supports 1-day, 7-day, and 30-day license keys.

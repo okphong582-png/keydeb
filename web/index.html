@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GloryStore - Key Management System</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div id="login-screen" class="screen active">
+            <div class="login-box">
+                <div class="logo">
+                    <i class="fas fa-crown"></i>
+                    <h1>GloryStore</h1>
+                    <p>Key Management System</p>
+                </div>
+                <div class="login-form">
+                    <input type="password" id="admin-password" placeholder="Enter Admin Key" autocomplete="off">
+                    <button onclick="login()" class="btn-primary">
+                        <i class="fas fa-lock-open"></i> Login
+                    </button>
+                </div>
+                <div id="login-error" class="error-msg"></div>
+            </div>
+        </div>
+
+        <div id="dashboard-screen" class="screen">
+            <header>
+                <div class="header-left">
+                    <i class="fas fa-crown"></i>
+                    <h2>GloryStore</h2>
+                </div>
+                <div class="header-center">
+                    <nav>
+                        <a href="#" class="nav-item active" onclick="showTab('dashboard')"><i class="fas fa-chart-pie"></i></a>
+                        <a href="#" class="nav-item" onclick="showTab('generate')"><i class="fas fa-key"></i></a>
+                        <a href="#" class="nav-item" onclick="showTab('keys')"><i class="fas fa-list"></i></a>
+                        <a href="#" class="nav-item" onclick="showTab('devices')"><i class="fas fa-mobile-alt"></i></a>
+                    </nav>
+                </div>
+                <div class="header-right">
+                    <span id="clock-display" class="clock"></span>
+                    <button onclick="logout()" class="btn-logout"><i class="fas fa-sign-out-alt"></i></button>
+                </div>
+            </header>
+
+            <main>
+                <section id="tab-dashboard" class="tab-content active">
+                    <div class="stats-grid">
+                        <div class="stat-card" style="--stat-color: #ff6b35;">
+                            <div class="stat-icon"><i class="fas fa-key"></i></div>
+                            <div class="stat-info">
+                                <h3>Total Keys</h3>
+                                <p id="total-keys">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card" style="--stat-color: #00c853;">
+                            <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                            <div class="stat-info">
+                                <h3>Active</h3>
+                                <p id="active-keys">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card" style="--stat-color: #ff1744;">
+                            <div class="stat-icon"><i class="fas fa-times-circle"></i></div>
+                            <div class="stat-info">
+                                <h3>Used</h3>
+                                <p id="used-keys">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card" style="--stat-color: #2979ff;">
+                            <div class="stat-icon"><i class="fas fa-mobile-alt"></i></div>
+                            <div class="stat-info">
+                                <h3>Devices</h3>
+                                <p id="total-devices">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="charts-row">
+                        <div class="chart-box">
+                            <h3><i class="fas fa-chart-bar"></i> Keys by Duration</h3>
+                            <div class="duration-chart" id="duration-chart"></div>
+                        </div>
+                        <div class="chart-box">
+                            <h3><i class="fas fa-clock"></i> Recent Activity</h3>
+                            <div class="activity-list" id="recent-activity">
+                                <p class="empty-state">No recent activity</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="tab-generate" class="tab-content">
+                    <div class="generate-box">
+                        <h2><i class="fas fa-magic"></i> Generate Keys</h2>
+                        <div class="gen-form">
+                            <div class="form-group">
+                                <label>Duration</label>
+                                <div class="duration-selector">
+                                    <button class="dur-btn active" data-dur="1day" onclick="selectDuration(this)">
+                                        <i class="fas fa-sun"></i> 1 Day
+                                    </button>
+                                    <button class="dur-btn" data-dur="7day" onclick="selectDuration(this)">
+                                        <i class="fas fa-calendar-week"></i> 7 Days
+                                    </button>
+                                    <button class="dur-btn" data-dur="30day" onclick="selectDuration(this)">
+                                        <i class="fas fa-calendar-alt"></i> 30 Days
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Quantity</label>
+                                <div class="quantity-control">
+                                    <button onclick="adjustQty(-1)"><i class="fas fa-minus"></i></button>
+                                    <input type="number" id="key-quantity" value="1" min="1" max="100">
+                                    <button onclick="adjustQty(1)"><i class="fas fa-plus"></i></button>
+                                </div>
+                            </div>
+                            <button onclick="generateKeys()" class="btn-generate">
+                                <i class="fas fa-bolt"></i> Generate Keys
+                            </button>
+                        </div>
+                        <div id="gen-result" class="gen-result"></div>
+                    </div>
+                </section>
+
+                <section id="tab-keys" class="tab-content">
+                    <div class="keys-box">
+                        <div class="keys-header">
+                            <h2><i class="fas fa-list"></i> All Keys</h2>
+                            <div class="keys-filter">
+                                <button class="filter-btn active" onclick="filterKeys('all')" data-filter="all">All</button>
+                                <button class="filter-btn" onclick="filterKeys('active')" data-filter="active">Active</button>
+                                <button class="filter-btn" onclick="filterKeys('used')" data-filter="used">Used</button>
+                            </div>
+                        </div>
+                        <div class="table-wrapper">
+                            <table id="keys-table">
+                                <thead>
+                                    <tr>
+                                        <th>Key</th>
+                                        <th>Duration</th>
+                                        <th>Status</th>
+                                        <th>Device</th>
+                                        <th>Created</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="keys-body"></tbody>
+                            </table>
+                        </div>
+                        <p class="empty-state" id="keys-empty">No keys found</p>
+                    </div>
+                </section>
+
+                <section id="tab-devices" class="tab-content">
+                    <div class="devices-box">
+                        <h2><i class="fas fa-mobile-alt"></i> Activated Devices</h2>
+                        <div class="table-wrapper">
+                            <table id="devices-table">
+                                <thead>
+                                    <tr>
+                                        <th>Device ID</th>
+                                        <th>Key</th>
+                                        <th>Activated</th>
+                                        <th>Expires</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="devices-body"></tbody>
+                            </table>
+                        </div>
+                        <p class="empty-state" id="devices-empty">No devices activated</p>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

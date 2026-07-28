@@ -1,0 +1,28 @@
+#!/bin/bash
+
+set -e
+
+CONFIG_DIR="$HOME/.config/glorystore"
+mkdir -p "$CONFIG_DIR"
+chmod 700 "$CONFIG_DIR"
+
+ACTIVATION_FILE="$CONFIG_DIR/activation.dat"
+if [ -f "$ACTIVATION_FILE" ]; then
+    chmod 600 "$ACTIVATION_FILE"
+fi
+
+ldconfig 2>/dev/null || true
+
+echo ""
+echo "========================================"
+echo "  GloryStore KeyCheck System Installed"
+echo "========================================"
+echo ""
+echo "  Package: com.glorystore.keycheck"
+echo "  Version: 1.0.0"
+echo ""
+echo "  Thank you for choosing GloryStore!"
+echo "========================================"
+echo ""
+
+exit 0

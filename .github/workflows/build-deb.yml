@@ -1,0 +1,66 @@
+name: Build DEB Package
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential libcurl4-openssl-dev \
+          libssl-dev dpkg-dev lintian
+
+    - name: Build library
+      run: |
+        cd src/libkeycheck
+        make
+        make install DESTDIR=${{ github.workspace }}/build
+
+    - name: Build DEB package
+      run: |
+        mkdir -p build/DEBIAN
+        cp DEBIAN/control build/DEBIAN/
+        cp DEBIAN/postinst build/DEBIAN/
+        cp DEBIAN/prerm build/DEBIAN/
+        chmod 755 build/DEBIAN/postinst
+        chmod 755 build/DEBIAN/prerm
+
+        mkdir -p build/usr/lib
+        mkdir -p build/usr/bin
+        mkdir -p build/etc/keycheck
+
+        cp build/lib/libkeycheck.so build/usr/lib/
+        cp build/bin/keycheck build/usr/bin/
+        cp scripts/keycheck.sh build/usr/bin/keycheck-wrapper
+
+        chmod 755 build/usr/bin/keycheck
+        chmod 755 build/usr/bin/keycheck-wrapper
+
+        cd build
+        dpkg-deb --build . ${{ github.workspace }}/com.glorystore.keycheck.deb
+
+    - name: Verify package
+      run: |
+        lintian ${{ github.workspace }}/com.glorystore.keycheck.deb || true
+        dpkg -I ${{ github.workspace }}/com.glorystore.keycheck.deb
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: glorystore-keycheck-deb
+        path: com.glorystore.keycheck.deb
+
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: com.glorystore.keycheck.deb
