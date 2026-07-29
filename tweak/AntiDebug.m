@@ -51,7 +51,7 @@ typedef int (*ptrace_ptr_t)(int request, pid_t pid, caddr_t addr, int data);
 }
 
 + (BOOL)isDebuggerAttached {
-    // 1. Kiểm tra sysctl
+    // 1. Kiểm tra sysctl (Phổ biến và an toàn nhất)
     int name[4];
     struct kinfo_proc info;
     size_t info_size = sizeof(info);
@@ -70,14 +70,7 @@ typedef int (*ptrace_ptr_t)(int request, pid_t pid, caddr_t addr, int data);
         return YES;
     }
     
-    // 2. Kiểm tra Exception Port (nếu debugger bắt các exception)
-    mach_port_t port = MACH_PORT_NULL;
-    kern_return_t kr = task_get_special_port(mach_task_self(), TASK_EXCEPTION_PORT, &port);
-    if (kr == KERN_SUCCESS && MACH_PORT_VALID(port)) {
-        return YES;
-    }
-    
-    // 3. Kiểm tra parent process ID (nếu được fork từ debugger)
+    // 2. Kiểm tra parent process ID (nếu được fork từ debugger như lldb/debugserver)
     // Trên iOS bình thường parent là launchd (PID 1), nếu PPID > 1 và không phải là các dịch vụ hệ thống phổ biến thì đáng ngờ
     pid_t ppid = getppid();
     if (ppid > 1) {
@@ -93,11 +86,6 @@ typedef int (*ptrace_ptr_t)(int request, pid_t pid, caddr_t addr, int data);
                 return YES;
             }
         }
-    }
-    
-    // 4. Kiểm tra xem có đang bị debug bởi checking isatty
-    if (isatty(1)) {
-        return YES;
     }
     
     return NO;
