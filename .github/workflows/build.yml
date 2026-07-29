@@ -1,0 +1,46 @@
+name: Build GloryKey DEB
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build iOS Tweak
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Theos Environment
+        run: |
+          echo "Setting up Theos..."
+          git clone --recursive https://github.com/theos/theos.git $GITHUB_WORKSPACE/theos
+          echo "THEOS=$GITHUB_WORKSPACE/theos" >> $GITHUB_ENV
+
+      - name: Download iOS SDK
+        run: |
+          echo "Downloading iOS 14.5 SDK..."
+          mkdir -p $GITHUB_WORKSPACE/theos/sdks
+          curl -L https://github.com/theos/sdks/raw/master/iPhoneOS14.5.sdk.tar.xz | tar -xf - -C $GITHUB_WORKSPACE/theos/sdks
+
+      - name: Build Tweak
+        run: |
+          cd tweak
+          make clean
+          make package FINALPACKAGE=1
+          echo "Build completed successfully!"
+
+      - name: Upload DEB Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GloryKey-DEB
+          path: tweak/packages/*.deb

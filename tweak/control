@@ -1,0 +1,8 @@
+Package: com.glory.keydeb
+Name: GloryKey
+Depends: mobilesubstrate
+Version: 1.0.0
+Architecture: iphoneos-arm
+Description: Key activation system with anti-debugging for iOS apps.
+Maintainer: GloryStore
+Author: GloryStore

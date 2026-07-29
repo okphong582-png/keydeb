@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GloryStore - Hệ Sinh Thái Quản Lý Key</title>
+    <!-- Google Fonts Outfit -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-color: #030712;
+            --panel-bg: rgba(10, 18, 42, 0.65);
+            --neon-blue: #00d2ff;
+            --neon-cyan: #00f2fe;
+            --neon-purple: #7000ff;
+            --text-color: #f3f4f6;
+            --text-muted: #9ca3af;
+            --border-glow: rgba(0, 210, 255, 0.25);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Canvas sứa động */
+        #jellyfish-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Hiệu ứng gradient nền bổ sung */
+        .ambient-glow {
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 210, 255, 0.08) 0%, rgba(112, 0, 255, 0.03) 70%, transparent 100%);
+            top: -10%;
+            right: -10%;
+            z-index: -2;
+            pointer-events: none;
+        }
+        
+        .ambient-glow-2 {
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(112, 0, 255, 0.06) 0%, rgba(0, 210, 255, 0.02) 70%, transparent 100%);
+            bottom: -10%;
+            left: -10%;
+            z-index: -2;
+            pointer-events: none;
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+            position: relative;
+        }
+
+        .logo-container {
+            display: inline-block;
+            position: relative;
+            margin-bottom: 10px;
+        }
+
+        .logo-text {
+            font-size: 3rem;
+            font-weight: 800;
+            letter-spacing: 4px;
+            background: linear-gradient(135deg, #fff 20%, var(--neon-blue) 60%, var(--neon-purple) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(0, 210, 255, 0.3);
+            text-transform: uppercase;
+        }
+
+        .logo-glow {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, transparent 20%, var(--neon-blue) 60%, var(--neon-purple) 100%);
+            filter: blur(15px);
+            opacity: 0.4;
+            z-index: -1;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: var(--neon-blue);
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            font-weight: 600;
+            text-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
+            margin-top: 5px;
+        }
+
+        /* Layout Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 968px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Glassmorphism Card */
+        .glass-panel {
+            background: var(--panel-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border-glow);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        .glass-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+        }
+
+        .glass-panel:hover {
+            border-color: rgba(0, 210, 255, 0.4);
+            box-shadow: 0 8px 32px 0 rgba(0, 210, 255, 0.1);
+        }
+
+        .panel-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #fff;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 12px;
+        }
+
+        .panel-title i {
+            color: var(--neon-blue);
+            text-shadow: 0 0 8px rgba(0, 210, 255, 0.6);
+        }
+
+        /* Form Controls */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            transition: var(--transition);
+        }
+
+        input, select {
+            width: 100%;
+            background: rgba(5, 10, 25, 0.8);
+            border: 1px solid rgba(0, 210, 255, 0.15);
+            padding: 14px 15px 14px 45px;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        input:focus, select:focus {
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.2);
+        }
+
+        input:focus + i, select:focus + i {
+            color: var(--neon-blue);
+        }
+
+        /* Radio group thời hạn */
+        .duration-group {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .duration-option {
+            position: relative;
+        }
+
+        .duration-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+
+        .duration-label {
+            display: block;
+            text-align: center;
+            background: rgba(5, 10, 25, 0.8);
+            border: 1px solid rgba(0, 210, 255, 0.15);
+            padding: 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .duration-option input[type="radio"]:checked + .duration-label {
+            background: linear-gradient(135deg, rgba(0, 210, 255, 0.2), rgba(112, 0, 255, 0.2));
+            border-color: var(--neon-blue);
+            color: var(--neon-blue);
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.15);
+        }
+
+        /* Buttons */
+        .btn {
+            width: 100%;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            color: #fff;
+            border: none;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 4px 15px rgba(0, 210, 255, 0.25);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(0, 210, 255, 0.4);
+            filter: brightness(1.1);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid rgba(0, 210, 255, 0.3);
+            color: var(--neon-blue);
+            box-shadow: none;
+        }
+
+        .btn-outline:hover {
+            background: rgba(0, 210, 255, 0.08);
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.15);
+        }
+
+        /* Stats Card */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .stat-card {
+            background: rgba(5, 10, 25, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 15px 10px;
+            text-align: center;
+        }
+
+        .stat-num {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .stat-num.active { color: var(--neon-blue); }
+        .stat-num.used { color: var(--neon-purple); }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Table panel */
+        .table-header-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 15px;
+        }
+
+        .search-box {
+            flex-grow: 1;
+            max-width: 400px;
+        }
+
+        .btn-export {
+            width: auto;
+            padding: 10px 20px;
+            font-size: 0.9rem;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            background: rgba(5, 10, 25, 0.8);
+            padding: 14px 18px;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--neon-blue);
+            font-weight: 700;
+            border-bottom: 2px solid rgba(0, 210, 255, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        td {
+            padding: 14px 18px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.95rem;
+            color: var(--text-color);
+        }
+
+        tr:hover td {
+            background: rgba(0, 210, 255, 0.03);
+        }
+
+        .key-code-cell {
+            font-family: 'Share Tech Mono', monospace;
+            color: #fff;
+            font-weight: bold;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .copy-icon {
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: var(--transition);
+        }
+
+        .copy-icon:hover {
+            color: var(--neon-blue);
+            transform: scale(1.2);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .badge-1d { background: rgba(0, 210, 255, 0.15); color: var(--neon-blue); border: 1px solid rgba(0, 210, 255, 0.3); }
+        .badge-7d { background: rgba(112, 0, 255, 0.15); color: #a855f7; border: 1px solid rgba(112, 0, 255, 0.3); }
+        .badge-30d { background: rgba(236, 72, 153, 0.15); color: #ec4899; border: 1px solid rgba(236, 72, 153, 0.3); }
+
+        .btn-delete-row {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: var(--transition);
+            padding: 5px;
+        }
+
+        .btn-delete-row:hover {
+            color: #ef4444;
+            transform: scale(1.1);
+        }
+
+        /* Toast thông báo */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(10, 20, 40, 0.9);
+            border: 1px solid var(--neon-blue);
+            border-radius: 10px;
+            padding: 12px 24px;
+            color: #fff;
+            z-index: 999;
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(5, 10, 25, 0.5);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 210, 255, 0.3);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 210, 255, 0.6);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Canvas sinh ra sứa chuyển động mượt mà phong cách GloryStore -->
+    <canvas id="jellyfish-canvas"></canvas>
+    
+    <div class="ambient-glow"></div>
+    <div class="ambient-glow-2"></div>
+
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="logo-container">
+                <h1 class="logo-text">GloryStore</h1>
+                <div class="logo-glow"></div>
+            </div>
+            <div class="subtitle">Hệ Sinh Thái Quản Lý Key Kích Hoạt</div>
+        </header>
+
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid">
+            
+            <!-- Cột trái: Tạo Key -->
+            <div class="glass-panel">
+                <h2 class="panel-title"><i class="fa-solid fa-key"></i> Tạo Key Mới</h2>
+                
+                <div class="form-group">
+                    <label>Tiền tố Key (Prefix)</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="key-prefix" value="GLORY-" placeholder="Ví dụ: GLORY-">
+                        <i class="fa-solid fa-font"></i>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Thời hạn sử dụng</label>
+                    <div class="duration-group">
+                        <div class="duration-option">
+                            <input type="radio" name="duration" id="dur-1" value="1" checked>
+                            <label for="dur-1" class="duration-label">1 Ngày</label>
+                        </div>
+                        <div class="duration-option">
+                            <input type="radio" name="duration" id="dur-7" value="7">
+                            <label for="dur-7" class="duration-label">7 Ngày</label>
+                        </div>
+                        <div class="duration-option">
+                            <input type="radio" name="duration" id="dur-30" value="30">
+                            <label for="dur-30" class="duration-label">30 Ngày</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Số lượng tạo</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="key-quantity" value="1" min="1" max="100">
+                        <i class="fa-solid fa-layer-group"></i>
+                    </div>
+                </div>
+
+                <button class="btn" id="btn-generate" onclick="generateKeys()">
+                    <i class="fa-solid fa-plus-circle"></i> TẠO MÃ KÍCH HOẠT
+                </button>
+
+                <!-- Thống kê nhanh -->
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <div class="stat-num" id="stat-total">0</div>
+                        <div class="stat-label">Tổng số</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-num active" id="stat-active">0</div>
+                        <div class="stat-label">Chưa dùng</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-num used" id="stat-used">0</div>
+                        <div class="stat-label">Đã dùng</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cột phải: Danh sách Key -->
+            <div class="glass-panel">
+                <h2 class="panel-title"><i class="fa-solid fa-list-check"></i> Danh Sách Key Đã Tạo</h2>
+                
+                <div class="table-header-controls">
+                    <div class="search-box">
+                        <div class="input-wrapper">
+                            <input type="text" id="search-input" onkeyup="filterKeys()" placeholder="Tìm kiếm key...">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </div>
+                    </div>
+                    <button class="btn btn-outline btn-export" onclick="exportKeys()">
+                        <i class="fa-solid fa-download"></i> Xuất TXT
+                    </button>
+                </div>
+
+                <div class="table-wrapper">
+                    <table id="keys-table">
+                        <thead>
+                            <tr>
+                                <th>Mã kích hoạt</th>
+                                <th>Thời hạn</th>
+                                <th>Ngày tạo</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="keys-list">
+                            <!-- Danh sách key sẽ tự động render ở đây -->
+                            <tr>
+                                <td colspan="4" class="empty-state">
+                                    <i class="fa-solid fa-spinner fa-spin"></i>
+                                    <p>Đang tải dữ liệu từ Firebase...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Toast thông báo nhanh -->
+    <div id="toast" class="toast">
+        <i class="fa-solid fa-circle-check" style="color: var(--neon-blue);"></i>
+        <span id="toast-message">Đã sao chép vào clipboard!</span>
+    </div>
+
+    <!-- SDK Firebase Compat -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+    <script>
+        // Cấu hình Firebase Realtime Database
+        const firebaseConfig = {
+            apiKey: "AIzaSyAmP7OU9mhsQruZ2BWXLzhK3HlWkKH-ftI",
+            authDomain: "appchatai-313e3.firebaseapp.com",
+            databaseURL: "https://appchatai-313e3-default-rtdb.firebaseio.com",
+            projectId: "appchatai-313e3",
+            storageBucket: "appchatai-313e3.firebasestorage.app",
+            messagingSenderId: "618265386307",
+            appId: "1:618265386307:web:81ab012e336977d90023f6",
+            measurementId: "G-2952X10THM"
+        };
+
+        // Khởi tạo Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const keysRef = db.ref('keys');
+
+        let allKeys = {};
+
+        // Lắng nghe dữ liệu realtime từ Firebase
+        keysRef.on('value', (snapshot) => {
+            allKeys = snapshot.val() || {};
+            renderKeys();
+            updateStats();
+        }, (error) => {
+            console.error("Lỗi đọc dữ liệu: ", error);
+            showNotification("Lỗi đồng bộ Firebase! Hãy kiểm tra Rules Database.");
+        });
+
+        // Hàm ngẫu nhiên hóa key
+        function generateRandomString(length = 12) {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let result = '';
+            for (let i = 0; i < length; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            // Định dạng XXXX-XXXX-XXXX
+            return result.match(/.{1,4}/g).join('-');
+        }
+
+        // Tạo Key mới và đẩy lên Firebase
+        function generateKeys() {
+            const btn = document.getElementById('btn-generate');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang tạo...`;
+
+            const prefix = document.getElementById('key-prefix').value.trim();
+            const duration = parseInt(document.querySelector('input[name="duration"]:checked').value);
+            const quantity = parseInt(document.getElementById('key-quantity').value) || 1;
+
+            const updates = {};
+            const timestamp = Date.now();
+            const createdKeysList = [];
+
+            for (let i = 0; i < quantity; i++) {
+                const randomPart = generateRandomString(12);
+                const fullKey = (prefix + randomPart).toUpperCase();
+                
+                updates[fullKey] = {
+                    duration: duration,
+                    createdAt: timestamp,
+                    status: "active"
+                };
+                createdKeysList.push(fullKey);
+            }
+
+            keysRef.update(updates)
+                .then(() => {
+                    showNotification(`Đã tạo thành công ${quantity} key mới!`);
+                    // Đưa UI về bình thường
+                    btn.disabled = false;
+                    btn.innerHTML = `<i class="fa-solid fa-plus-circle"></i> TẠO MÃ KÍCH HOẠT`;
+                })
+                .catch((err) => {
+                    console.error("Lỗi ghi Firebase: ", err);
+                    showNotification("Có lỗi xảy ra khi lưu key!");
+                    btn.disabled = false;
+                    btn.innerHTML = `<i class="fa-solid fa-plus-circle"></i> TẠO MÃ KÍCH HOẠT`;
+                });
+        }
+
+        // Render dữ liệu bảng Key
+        function renderKeys() {
+            const listBody = document.getElementById('keys-list');
+            listBody.innerHTML = '';
+
+            const keysArray = Object.keys(allKeys).map(key => ({
+                id: key,
+                ...allKeys[key]
+            })).sort((a, b) => b.createdAt - a.createdAt); // Xếp mới nhất lên đầu
+
+            if (keysArray.length === 0) {
+                listBody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="empty-state">
+                            <i class="fa-solid fa-box-open"></i>
+                            <p>Không có key nào trong hệ thống.</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            keysArray.forEach(keyObj => {
+                const date = new Date(keyObj.createdAt).toLocaleString('vi-VN');
+                const durationText = keyObj.duration + " ngày";
+                let badgeClass = "badge-1d";
+                if (keyObj.duration === 7) badgeClass = "badge-7d";
+                if (keyObj.duration === 30) badgeClass = "badge-30d";
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>
+                        <div class="key-code-cell">
+                            <span id="key-${keyObj.id}">${keyObj.id}</span>
+                            <i class="fa-regular fa-copy copy-icon" onclick="copyToClipboard('${keyObj.id}')" title="Sao chép"></i>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge ${badgeClass}">${durationText}</span>
+                    </td>
+                    <td>
+                        <div style="font-size: 0.85rem; color: var(--text-muted)">${date}</div>
+                    </td>
+                    <td>
+                        <button class="btn-delete-row" onclick="deleteKey('${keyObj.id}')" title="Xóa Key">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </td>
+                `;
+                listBody.appendChild(tr);
+            });
+        }
+
+        // Cập nhật thống kê
+        function updateStats() {
+            const keysArray = Object.values(allKeys);
+            const total = keysArray.length;
+            // Ở phiên bản này, key khi dùng xong sẽ bị xoá khỏi Firebase ngay lập tức nên hầu như chỉ có trạng thái active
+            const active = keysArray.filter(k => k.status === 'active').length;
+            const used = total - active;
+
+            document.getElementById('stat-total').innerText = total;
+            document.getElementById('stat-active').innerText = active;
+            document.getElementById('stat-used').innerText = used;
+        }
+
+        // Lọc Key bằng thanh tìm kiếm
+        function filterKeys() {
+            const query = document.getElementById('search-input').value.toUpperCase();
+            const listBody = document.getElementById('keys-list');
+            const rows = listBody.getElementsByTagName('tr');
+
+            for (let i = 0; i < rows.length; i++) {
+                const keyCell = rows[i].getElementsByClassName('key-code-cell')[0];
+                if (keyCell) {
+                    const text = keyCell.innerText || keyCell.textContent;
+                    if (text.toUpperCase().indexOf(query) > -1) {
+                        rows[i].style.display = "";
+                    } else {
+                        rows[i].style.display = "none";
+                    }
+                }
+            }
+        }
+
+        // Xóa Key đơn lẻ
+        function deleteKey(keyId) {
+            if (confirm(`Bạn có chắc chắn muốn xóa key ${keyId} khỏi hệ thống?`)) {
+                keysRef.child(keyId).remove()
+                    .then(() => {
+                        showNotification("Đã xóa key thành công.");
+                    })
+                    .catch(err => {
+                        console.error("Lỗi xóa key: ", err);
+                        showNotification("Không thể xóa key.");
+                    });
+            }
+        }
+
+        // Xuất danh sách key ra file TXT
+        function exportKeys() {
+            const activeKeys = Object.keys(allKeys).filter(k => allKeys[k].status === 'active');
+            if (activeKeys.length === 0) {
+                showNotification("Không có key nào hoạt động để xuất file!");
+                return;
+            }
+
+            let textContent = "===== DANH SÁCH KEY GLORYSTORE =====\n\n";
+            activeKeys.forEach(k => {
+                textContent += `Key: ${k} [Hạn dùng: ${allKeys[k].duration} ngày]\n`;
+            });
+
+            const blob = new Blob([textContent], { type: "text/plain;charset=utf-8" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `glory_keys_${Date.now()}.txt`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showNotification("Đã tải về file txt chứa danh sách key!");
+        }
+
+        // Sao chép key vào clipboard
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showNotification(`Đã sao chép: ${text}`);
+            }).catch(err => {
+                console.error("Lỗi sao chép: ", err);
+            });
+        }
+
+        // Hiển thị Toast thông báo
+        function showNotification(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').innerText = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // --- Canvas Animation - Bioluminescent Jellyfish ---
+        const canvas = document.getElementById('jellyfish-canvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Jellyfish {
+            constructor() {
+                this.reset();
+                this.y = Math.random() * canvas.height;
+            }
+
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = canvas.height + 100;
+                this.radius = Math.random() * 25 + 15;
+                this.speed = Math.random() * 0.5 + 0.3;
+                this.pulseSpeed = Math.random() * 0.03 + 0.02;
+                this.pulseTime = Math.random() * 100;
+                this.tentacles = [];
+                const tentacleCount = Math.floor(Math.random() * 5) + 6;
+                for (let i = 0; i < tentacleCount; i++) {
+                    this.tentacles.push({
+                        offset: (i - (tentacleCount - 1) / 2) * (this.radius / 3),
+                        length: Math.random() * 40 + 60,
+                        phase: Math.random() * Math.PI * 2
+                    });
+                }
+                // Màu dạ quang chuyển từ xanh dương sang tím sứa
+                this.hue = Math.random() > 0.4 ? 190 : 270; // 190 = Cyan/Blue, 270 = Purple
+                this.alpha = Math.random() * 0.3 + 0.15;
+            }
+
+            update() {
+                this.y -= this.speed;
+                this.pulseTime += this.pulseSpeed;
+                
+                // Trôi nhẹ ngang qua lại
+                this.x += Math.sin(this.pulseTime * 0.2) * 0.2;
+
+                if (this.y < -this.radius * 2) {
+                    this.reset();
+                }
+            }
+
+            draw() {
+                const pulseFactor = 1 + Math.sin(this.pulseTime) * 0.15;
+                const r = this.radius * pulseFactor;
+
+                ctx.save();
+                ctx.translate(this.x, this.y);
+
+                // Vẽ xúc tu trước (ở sau đầu sứa)
+                this.tentacles.forEach(t => {
+                    ctx.beginPath();
+                    ctx.moveTo(t.offset, r * 0.2);
+                    
+                    let prevX = t.offset;
+                    let prevY = r * 0.2;
+                    
+                    const pointsCount = 10;
+                    for (let j = 0; j < pointsCount; j++) {
+                        const nextY = r * 0.2 + (t.length / pointsCount) * j;
+                        const wave = Math.sin(this.pulseTime + j * 0.4 + t.phase) * (r * 0.15);
+                        const nextX = t.offset + wave;
+                        
+                        ctx.lineTo(nextX, nextY);
+                    }
+                    
+                    // Tạo viền mờ cho xúc tu
+                    ctx.strokeStyle = `hsla(${this.hue}, 100%, 70%, ${this.alpha * 0.5})`;
+                    ctx.lineWidth = 1.5;
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = `hsla(${this.hue}, 100%, 70%, 1)`;
+                    ctx.stroke();
+                });
+
+                // Vẽ đầu sứa (mũ sứa)
+                ctx.beginPath();
+                ctx.arc(0, 0, r, Math.PI, 0, false); // Nửa hình tròn phía trên
+                
+                // Phần thân dưới mũ sứa uốn lượn nhẹ
+                ctx.bezierCurveTo(r * 0.8, r * 0.3, r * 0.4, r * 0.1, 0, r * 0.2);
+                ctx.bezierCurveTo(-r * 0.4, r * 0.1, -r * 0.8, r * 0.3, -r, 0);
+
+                const grad = ctx.createRadialGradient(0, -r*0.2, r*0.1, 0, 0, r);
+                grad.addColorStop(0, `hsla(${this.hue}, 100%, 80%, ${this.alpha * 0.8})`);
+                grad.addColorStop(0.5, `hsla(${this.hue}, 100%, 65%, ${this.alpha * 0.4})`);
+                grad.addColorStop(1, `hsla(${this.hue}, 100%, 50%, 0)`);
+
+                ctx.fillStyle = grad;
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = `hsla(${this.hue}, 100%, 60%, 1)`;
+                ctx.fill();
+
+                // Vẽ viền sáng mảnh xung quanh mũ sứa
+                ctx.beginPath();
+                ctx.arc(0, 0, r, Math.PI, 0, false);
+                ctx.strokeStyle = `hsla(${this.hue}, 100%, 85%, ${this.alpha})`;
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                ctx.restore();
+            }
+        }
+
+        // Tạo mảng lưu các thực thể sứa
+        const jellyfishList = [];
+        const jellyfishCount = 6;
+        for (let i = 0; i < jellyfishCount; i++) {
+            jellyfishList.push(new Jellyfish());
+        }
+
+        // Tạo thêm hạt bụi nước phát sáng (bio-particles)
+        class Particle {
+            constructor() {
+                this.reset();
+                this.y = Math.random() * canvas.height;
+            }
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = canvas.height + 10;
+                this.size = Math.random() * 2 + 1;
+                this.speed = Math.random() * 0.3 + 0.1;
+                this.alpha = Math.random() * 0.5 + 0.1;
+                this.hue = Math.random() > 0.5 ? 190 : 270;
+            }
+            update() {
+                this.y -= this.speed;
+                this.x += Math.sin(this.y * 0.01) * 0.1;
+                if (this.y < -10) {
+                    this.reset();
+                }
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = `hsla(${this.hue}, 100%, 75%, ${this.alpha})`;
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = `hsla(${this.hue}, 100%, 75%, 1)`;
+                ctx.fill();
+            }
+        }
+
+        const particlesList = [];
+        const particlesCount = 40;
+        for (let i = 0; i < particlesCount; i++) {
+            particlesList.push(new Particle());
+        }
+
+        // Loop animation vẽ lại liên tục
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Vẽ các hạt sáng nhỏ
+            particlesList.forEach(p => {
+                p.update();
+                p.draw();
+            });
+
+            // Vẽ sứa
+            jellyfishList.forEach(j => {
+                j.update();
+                j.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        // Bắt đầu chạy hiệu ứng sứa động
+        animate();
+    </script>
+</body>
+</html>
