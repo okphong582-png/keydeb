@@ -1,17 +1,6 @@
 #import "AntiDebug.h"
 #import <sys/sysctl.h>
 #import <unistd.h>
-#import <dlfcn.h>
-#import <sys/syscall.h>
-#import <mach/mach.h>
-#import <mach/task.h>
-
-#define PT_DENY_ATTACH 31
-#ifndef TASK_EXCEPTION_PORT
-#define TASK_EXCEPTION_PORT 1
-#endif
-
-typedef int (*ptrace_ptr_t)(int request, pid_t pid, caddr_t addr, int data);
 
 @implementation AntiDebug
 
@@ -19,7 +8,7 @@ typedef int (*ptrace_ptr_t)(int request, pid_t pid, caddr_t addr, int data);
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
         while (1) {
             if ([self isDebuggerAttached]) {
-                // Tự sát bằng cách sinh ra lỗi SIGTRAP hoặc crash để chống dịch ngược
+                // Tự sát bằng cách crash ứng dụng để chống dịch ngược
                 #if defined(__arm64__) || defined(__aarch64__)
                 asm volatile(".inst 0xd4200020"); // BRK #1 (arm64 crash)
                 #else
@@ -27,31 +16,14 @@ typedef int (*ptrace_ptr_t)(int request, pid_t pid, caddr_t addr, int data);
                 #endif
                 exit(0);
             }
-            [self denyAttach];
-            sleep(2); // Kiểm tra lại sau mỗi 2 giây
+            sleep(3); // Kiểm tra định kỳ mỗi 3 giây
         }
     });
 }
 
-+ (void)denyAttach {
-    // 1. Gọi ptrace bằng syscall trực tiếp để tránh bị hook hàm ptrace thường
-    #ifdef SYS_ptrace
-    syscall(SYS_ptrace, PT_DENY_ATTACH, 0, 0, 0);
-    #else
-    syscall(26, PT_DENY_ATTACH, 0, 0, 0); // 26 là mã syscall của ptrace trên iOS
-    #endif
-
-    // 2. Gọi ptrace động qua dlsym
-    void *handle = dlopen(0, RTLD_GLOBAL | RTLD_NOW);
-    ptrace_ptr_t ptrace_ptr = (ptrace_ptr_t)dlsym(handle, "ptrace");
-    if (ptrace_ptr) {
-        ptrace_ptr(PT_DENY_ATTACH, 0, 0, 0);
-    }
-    dlclose(handle);
-}
-
 + (BOOL)isDebuggerAttached {
-    // 1. Kiểm tra sysctl (Phổ biến và an toàn nhất)
+    // Kiểm tra sysctl của chính tiến trình (getpid()).
+    // Đây là phương pháp chính thống, an toàn 100% trong Sandbox của iOS và không bao giờ bị văng/vi phạm quyền.
     int name[4];
     struct kinfo_proc info;
     size_t info_size = sizeof(info);
@@ -66,26 +38,9 @@ typedef int (*ptrace_ptr_t)(int request, pid_t pid, caddr_t addr, int data);
         return NO;
     }
     
+    // Nếu cờ P_TRACED được bật, tức là lldb/gdb đang đính kèm vào app
     if ((info.kp_proc.p_flag & P_TRACED) != 0) {
         return YES;
-    }
-    
-    // 2. Kiểm tra parent process ID (nếu được fork từ debugger như lldb/debugserver)
-    // Trên iOS bình thường parent là launchd (PID 1), nếu PPID > 1 và không phải là các dịch vụ hệ thống phổ biến thì đáng ngờ
-    pid_t ppid = getppid();
-    if (ppid > 1) {
-        // Lấy tên PPID
-        int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_PID, ppid};
-        struct kinfo_proc parent_info;
-        size_t len = sizeof(parent_info);
-        if (sysctl(mib, 4, &parent_info, &len, NULL, 0) == 0) {
-            NSString *parentName = [NSString stringWithUTF8String:parent_info.kp_proc.p_comm];
-            if ([parentName containsString:@"debugserver"] || 
-                [parentName containsString:@"lldb"] || 
-                [parentName containsString:@"gdb"]) {
-                return YES;
-            }
-        }
     }
     
     return NO;
