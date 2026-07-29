@@ -7,6 +7,9 @@
 #import <mach/task.h>
 
 #define PT_DENY_ATTACH 31
+#ifndef TASK_EXCEPTION_PORT
+#define TASK_EXCEPTION_PORT 1
+#endif
 
 typedef int (*ptrace_ptr_t)(int request, pid_t pid, caddr_t addr, int data);
 
@@ -79,7 +82,6 @@ typedef int (*ptrace_ptr_t)(int request, pid_t pid, caddr_t addr, int data);
     pid_t ppid = getppid();
     if (ppid > 1) {
         // Lấy tên PPID
-        char ppid_name[256];
         int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_PID, ppid};
         struct kinfo_proc parent_info;
         size_t len = sizeof(parent_info);
