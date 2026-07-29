@@ -26,11 +26,15 @@ jobs:
           git clone --recursive https://github.com/theos/theos.git $GITHUB_WORKSPACE/theos
           echo "THEOS=$GITHUB_WORKSPACE/theos" >> $GITHUB_ENV
 
-      - name: Download iOS SDK
+      - name: Install dependencies
         run: |
-          echo "Downloading iOS 14.5 SDK..."
+          brew install ldid xz
+
+      - name: Set up iOS SDK from Xcode
+        run: |
+          echo "Linking Xcode iOS SDK..."
           mkdir -p $GITHUB_WORKSPACE/theos/sdks
-          curl -L https://github.com/theos/sdks/raw/master/iPhoneOS14.5.sdk.tar.xz | tar -xf - -C $GITHUB_WORKSPACE/theos/sdks
+          ln -s $(xcrun --sdk iphoneos --show-sdk-path) $GITHUB_WORKSPACE/theos/sdks/iPhoneOS.sdk
 
       - name: Build Tweak
         run: |
