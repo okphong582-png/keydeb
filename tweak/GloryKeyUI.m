@@ -55,7 +55,13 @@
     if (![self isActivated]) {
         // Chạy trên luồng chính
         dispatch_async(dispatch_get_main_queue(), ^{
+            UIView *existing = [window viewWithTag:998877];
+            if (existing) {
+                [window bringSubviewToFront:existing];
+                return;
+            }
             GloryKeyUI *keyUI = [[GloryKeyUI alloc] initWithFrame:window.bounds];
+            keyUI.tag = 998877;
             [window addSubview:keyUI];
             [window bringSubviewToFront:keyUI];
         });
